@@ -714,7 +714,7 @@ static bool advertising_on_ble_evt(ble_evt_t *ble_evt, void *self_in) {
     switch (ble_evt->header.evt_id) {
         case BLE_GAP_EVT_CONNECTED: // Connecting also stops an advertisement.
             // Set the tx_power for the connection higher than the advertisement.
-            sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_CONN, ble_evt->evt.gap_evt.conn_handle, 4);
+            sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_CONN, ble_evt->evt.gap_evt.conn_handle, 0);
             common_hal_bleio_adapter_stop_advertising(self);
             return false;
             break;
@@ -841,7 +841,7 @@ uint32_t _common_hal_bleio_adapter_start_advertising(bleio_adapter_obj_t *self,
 
     ble_drv_add_event_handler_entry(&self->advertising_handler_entry, advertising_on_ble_evt, self);
 
-    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, adv_handle, 4);
+    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, adv_handle, 0);
     if (err_code != NRF_SUCCESS) {
         return err_code;
     }
