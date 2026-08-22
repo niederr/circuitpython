@@ -41,6 +41,11 @@ jobs:
     - name: Set up repository
       run: |
         git clone --filter=tree:0 "https://github.com/${{ github.repository }}.git" "$GITHUB_WORKSPACE"
+    - name: Fetch upstream tags
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        git remote add upstream https://github.com/adafruit/circuitpython.git
+        git fetch upstream --tags
     - name: Checkout head / tag
       env:
         TAG: ${{ inputs.version == 'latest' && 'HEAD' || inputs.version }}
@@ -121,7 +126,7 @@ jobs:
         BOARD: ${{ inputs.board }}
         FLAGS: ${{ inputs.flags }}
         DEBUG: ${{ inputs.debug && '1' || '0' }}
-      run: make fetch-tags && make -j4 $FLAGS BOARD="$BOARD" DEBUG=$DEBUG TRANSLATION="$TRANSLATION"
+      run: make -j4 $FLAGS BOARD="$BOARD" DEBUG=$DEBUG TRANSLATION="$TRANSLATION"
       working-directory: ports/${{ steps.board-to-port.outputs.port }}
     - name: Upload artifact
       uses: actions/upload-artifact@v7
