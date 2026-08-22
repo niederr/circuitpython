@@ -841,7 +841,7 @@ uint32_t _common_hal_bleio_adapter_start_advertising(bleio_adapter_obj_t *self,
 
     ble_drv_add_event_handler_entry(&self->advertising_handler_entry, advertising_on_ble_evt, self);
 
-    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, adv_handle, 0);
+    err_code = sd_ble_gap_tx_power_set(BLE_GAP_TX_POWER_ROLE_ADV, adv_handle, 8);
     if (err_code != NRF_SUCCESS) {
         return err_code;
     }
