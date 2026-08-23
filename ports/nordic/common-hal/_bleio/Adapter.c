@@ -119,7 +119,7 @@ static uint32_t ble_stack_enable(void) {
     ble_conf.conn_cfg.params.gap_conn_cfg.conn_count = BLEIO_TOTAL_CONNECTION_COUNT;
     // Event length here can influence throughput so perhaps make multiple connection profiles
     // available.
-    ble_conf.conn_cfg.params.gap_conn_cfg.event_length = BLE_GAP_EVENT_LENGTH_DEFAULT;
+    ble_conf.conn_cfg.params.gap_conn_cfg.event_length = BLE_GAP_EVENT_LENGTH_CODED_PHY_MIN;
     err_code = sd_ble_cfg_set(BLE_CONN_CFG_GAP, &ble_conf, sd_ram_end);
     if (err_code != NRF_SUCCESS) {
         return err_code;
@@ -293,6 +293,34 @@ static bool adapter_on_ble_evt(ble_evt_t *ble_evt, void *self_in) {
                 obj->disconnect_reason = ble_evt->evt.gap_evt.params.disconnected.reason;
             }
             self->connection_objs = NULL;
+
+            break;
+        }
+        case BLE_GAP_EVT_PHY_UPDATE: {
+            ble_gap_evt_phy_update_t *phy =
+                &ble_evt->evt.gap_evt.params.phy_update;
+
+            mp_printf(&mp_plat_print,
+                "PHY UPDATE: status=%d TX=%d RX=%d\n",
+                phy->status,
+                phy->tx_phy,
+                phy->rx_phy);
+
+            break;
+        }
+        case BLE_GAP_EVT_PHY_UPDATE_REQUEST: {
+            ble_gap_phys_t phys = {
+                .tx_phys = BLE_GAP_PHY_CODED,
+                .rx_phys = BLE_GAP_PHY_CODED,
+            };
+
+            uint32_t err_code = sd_ble_gap_phy_update(
+                ble_evt->evt.gap_evt.conn_handle,
+                &phys);
+
+            mp_printf(&mp_plat_print,
+                "PHY request received: 0x%08lx\n",
+                err_code);
 
             break;
         }
@@ -555,7 +583,7 @@ mp_obj_t common_hal_bleio_adapter_start_scan(bleio_adapter_obj_t *self, uint8_t 
         .interval = SEC_TO_UNITS(interval, UNIT_0_625_MS) + 0.5f,
         .timeout = nrf_timeout,
         .window = SEC_TO_UNITS(window, UNIT_0_625_MS) + 0.5f,
-        .scan_phys = BLE_GAP_PHY_1MBPS,
+        .scan_phys = BLE_GAP_PHY_CODED,
         .active = active
     };
 
@@ -622,7 +650,7 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
     ble_gap_scan_params_t scan_params = {
         .interval = MSEC_TO_UNITS(100, UNIT_0_625_MS),
         .window = MSEC_TO_UNITS(100, UNIT_0_625_MS),
-        .scan_phys = BLE_GAP_PHY_1MBPS,
+        .scan_phys = BLE_GAP_PHY_CODED,
         // timeout of 0 means no timeout
         .timeout = SEC_TO_UNITS(timeout, UNIT_10_MS) + 0.5f,
     };
@@ -670,10 +698,13 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
     // Negotiate for better PHY, larger MTU and data lengths since we are the central.
     // The peer may decline, which is its prerogative.
     ble_gap_phys_t const phys = {
-        .rx_phys = BLE_GAP_PHY_AUTO,
-        .tx_phys = BLE_GAP_PHY_AUTO,
+        .rx_phys = BLE_GAP_PHY_CODED,
+        .tx_phys = BLE_GAP_PHY_CODED,
     };
-    sd_ble_gap_phy_update(conn_handle, &phys);
+    uint32_t err_code = sd_ble_gap_phy_update(conn_handle, &phys);
+    mp_printf(&mp_plat_print,
+        "PHY update request: 0x%08lx\n",
+        err_code);
     // The MTU size passed here has to match the value passed in the BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST
     // event handler in Connection.c, per the SD doc:
     //     "The value must be equal to Server RX MTU size given in
@@ -754,8 +785,7 @@ uint32_t _common_hal_bleio_adapter_start_advertising(bleio_adapter_obj_t *self,
         timeout = BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED;
     }
     uint32_t err_code;
-    bool extended = advertising_data_len > BLE_GAP_ADV_SET_DATA_SIZE_MAX ||
-        scan_response_data_len > BLE_GAP_ADV_SET_DATA_SIZE_MAX;
+    bool extended = true;
 
     uint8_t adv_type;
     ble_gap_addr_t *peer = NULL;
@@ -816,7 +846,8 @@ uint32_t _common_hal_bleio_adapter_start_advertising(bleio_adapter_obj_t *self,
         .properties.type = adv_type,
         .duration = SEC_TO_UNITS(timeout, UNIT_10_MS),
         .filter_policy = BLE_GAP_ADV_FP_ANY,
-        .primary_phy = BLE_GAP_PHY_1MBPS,
+        .primary_phy = BLE_GAP_PHY_CODED,
+        .secondary_phy = BLE_GAP_PHY_CODED,
         .p_peer_addr = peer,
     };
 
