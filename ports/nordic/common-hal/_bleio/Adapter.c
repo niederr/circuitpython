@@ -579,7 +579,7 @@ mp_obj_t common_hal_bleio_adapter_start_scan(bleio_adapter_obj_t *self, uint8_t 
     }
 
     ble_gap_scan_params_t scan_params = {
-        .extended = extended,
+        .extended = true,
         .interval = SEC_TO_UNITS(interval, UNIT_0_625_MS) + 0.5f,
         .timeout = nrf_timeout,
         .window = SEC_TO_UNITS(window, UNIT_0_625_MS) + 0.5f,
@@ -648,6 +648,7 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
     _convert_address(address, &addr);
 
     ble_gap_scan_params_t scan_params = {
+        .extended = true,
         .interval = MSEC_TO_UNITS(100, UNIT_0_625_MS),
         .window = MSEC_TO_UNITS(100, UNIT_0_625_MS),
         .scan_phys = BLE_GAP_PHY_CODED,
