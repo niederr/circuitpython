@@ -318,6 +318,11 @@ static bool adapter_on_ble_evt(ble_evt_t *ble_evt, void *self_in) {
                 ble_evt->evt.gap_evt.conn_handle,
                 &phys);
 
+            if (err_code != NRF_SUCCESS) {
+                mp_raise_bleio_BluetoothError(
+                    MP_ERROR_TEXT("sd_ble_gap_phy_update failed in event handler"));
+            }
+
             mp_printf(&mp_plat_print,
                 "PHY UPDATE REQUEST in event handler returned 0x%04lx, handle=%d\n",
                 err_code, ble_evt->evt.gap_evt.conn_handle);
@@ -669,6 +674,11 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
 
     uint32_t err_code = sd_ble_gap_connect(&addr, &scan_params, &conn_params, BLE_CONN_CFG_TAG_CUSTOM);
 
+    if (err_code != NRF_SUCCESS) {
+        mp_raise_bleio_BluetoothError(
+            MP_ERROR_TEXT("sd_ble_gap_connect failed"));
+    }
+
     mp_printf(&mp_plat_print,
         "CONNECT returned 0x%04lx\n", err_code);
 
@@ -706,6 +716,10 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
         .tx_phys = BLE_GAP_PHY_CODED,
     };
     uint32_t update_err_code = sd_ble_gap_phy_update(conn_handle, &phys);
+    if (update_err_code != NRF_SUCCESS) {
+        mp_raise_bleio_BluetoothError(
+            MP_ERROR_TEXT("sd_ble_gap_phy_update failed"));
+    }
     mp_printf(&mp_plat_print,
         "PHY UPDATE REQUEST returned 0x%04lx, handle=%d\n",
         update_err_code, conn_handle);
