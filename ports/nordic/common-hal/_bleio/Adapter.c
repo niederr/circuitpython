@@ -319,8 +319,8 @@ static bool adapter_on_ble_evt(ble_evt_t *ble_evt, void *self_in) {
                 &phys);
 
             mp_printf(&mp_plat_print,
-                "PHY request received: 0x%08lx\n",
-                err_code);
+                "PHY UPDATE REQUEST in event handler returned 0x%04lx, handle=%d\n",
+                err_code, ble_evt->evt.gap_evt.conn_handle);
 
             break;
         }
@@ -669,6 +669,9 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
 
     uint32_t err_code = sd_ble_gap_connect(&addr, &scan_params, &conn_params, BLE_CONN_CFG_TAG_CUSTOM);
 
+    mp_printf(&mp_plat_print,
+        "CONNECT returned 0x%04lx\n", err_code);
+
     if (err_code != NRF_SUCCESS) {
         ble_drv_remove_event_handler(connect_on_ble_evt, &event_info);
         check_nrf_error(err_code);
@@ -704,8 +707,8 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
     };
     uint32_t update_err_code = sd_ble_gap_phy_update(conn_handle, &phys);
     mp_printf(&mp_plat_print,
-        "PHY update request: 0x%08lx\n",
-        update_err_code);
+        "PHY UPDATE REQUEST returned 0x%04lx, handle=%d\n",
+        update_err_code, conn_handle);
     // The MTU size passed here has to match the value passed in the BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST
     // event handler in Connection.c, per the SD doc:
     //     "The value must be equal to Server RX MTU size given in
