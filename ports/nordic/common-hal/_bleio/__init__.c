@@ -22,27 +22,38 @@
 #include "common-hal/_bleio/bonding.h"
 
 void check_nrf_error(uint32_t err_code) {
+    check_nrf_error_with_call_id(0, err_code);
+}
+
+void check_nrf_error_with_call_id(uint16_t call_id, uint32_t err_code) {
     if (err_code == NRF_SUCCESS) {
         return;
     }
+    char msg[128];
     switch (err_code) {
         case NRF_ERROR_NO_MEM:
-            mp_raise_msg(&mp_type_MemoryError, MP_ERROR_TEXT("Nordic system firmware out of memory"));
+            snprintf(msg, sizeof(msg), "[CALL %u] Nordic system firmware out of memory", call_id);
+            mp_raise_msg(&mp_type_MemoryError, msg);
             return;
         case NRF_ERROR_TIMEOUT:
-            mp_raise_msg(&mp_type_TimeoutError, NULL);
+            snprintf(msg, sizeof(msg), "[CALL %u]", call_id);
+            mp_raise_msg(&mp_type_TimeoutError, msg);
             return;
         case NRF_ERROR_INVALID_PARAM:
-            mp_raise_ValueError(MP_ERROR_TEXT("Invalid BLE parameter"));
+            snprintf(msg, sizeof(msg), "[CALL %u] Invalid BLE parameter", call_id);
+            mp_raise_ValueError(msg);
             return;
         case NRF_ERROR_INVALID_STATE:
-            mp_raise_bleio_BluetoothError(MP_ERROR_TEXT("Invalid state"));
+            snprintf(msg, sizeof(msg), "[CALL %u] Invalid state", call_id);
+            mp_raise_bleio_BluetoothError(msg);
             return;
         case BLE_ERROR_INVALID_CONN_HANDLE:
-            mp_raise_ConnectionError(MP_ERROR_TEXT("Not connected"));
+            snprintf(msg, sizeof(msg), "[CALL %u] Not connected", call_id);
+            mp_raise_ConnectionError(msg);
             return;
         default:
-            mp_raise_bleio_BluetoothError(MP_ERROR_TEXT("Unknown system firmware error: %04x"), err_code);
+            snprintf(msg, sizeof(msg), "[CALL %u] Unknown system firmware error: %04x", call_id, err_code);
+            mp_raise_bleio_BluetoothError(msg);
             break;
     }
 }

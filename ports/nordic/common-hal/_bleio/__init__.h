@@ -19,6 +19,7 @@ typedef struct {
 #define GATT_MAX_DATA_LENGTH (BLE_GATT_ATT_MTU_DEFAULT - 3)
 
 // These helpers raise the appropriate exceptions if the code doesn't equal success.
+void check_nrf_error_with_call_id(uint16_t call_id, uint32_t err_code);
 void check_nrf_error(uint32_t err_code);
 void check_gatt_status(uint16_t gatt_status);
 void check_sec_status(uint8_t sec_status);

@@ -340,7 +340,7 @@ static bool adapter_on_ble_evt(ble_evt_t *ble_evt, void *self_in) {
 }
 
 static void get_address(bleio_adapter_obj_t *self, ble_gap_addr_t *address) {
-    check_nrf_error(sd_ble_gap_addr_get(address));
+    check_nrf_error_with_call_id(001, sd_ble_gap_addr_get(address));
 }
 
 char default_ble_name[] = { 'C', 'I', 'R', 'C', 'U', 'I', 'T', 'P', 'Y', 0, 0, 0, 0, 0};
@@ -398,7 +398,7 @@ void common_hal_bleio_adapter_set_enabled(bleio_adapter_obj_t *self, bool enable
     init_usb_hardware();
     #endif
 
-    check_nrf_error(err_code);
+    check_nrf_error_with_call_id(002, err_code);
 
     // Add a handler for incoming peripheral connections.
     if (enabled) {
@@ -430,7 +430,7 @@ void common_hal_bleio_adapter_set_enabled(bleio_adapter_obj_t *self, bool enable
 bool common_hal_bleio_adapter_get_enabled(bleio_adapter_obj_t *self) {
     uint8_t is_enabled;
 
-    check_nrf_error(sd_softdevice_is_enabled(&is_enabled));
+    check_nrf_error_with_call_id(003, sd_softdevice_is_enabled(&is_enabled));
 
     return is_enabled;
 }
@@ -546,7 +546,7 @@ mp_obj_t common_hal_bleio_adapter_start_scan(bleio_adapter_obj_t *self, uint8_t 
     }
     // Check to see if advertising is going already.
     if (self->current_advertising_data != NULL && self->current_advertising_data == self->advertising_data) {
-        check_nrf_error(NRF_ERROR_BUSY);
+        check_nrf_error_with_call_id(004, NRF_ERROR_BUSY);
     }
 
     // If the current advertising data isn't owned by the adapter then it must be an internal
@@ -565,7 +565,7 @@ mp_obj_t common_hal_bleio_adapter_start_scan(bleio_adapter_obj_t *self, uint8_t 
 
     // Update the identities of peripheral peers so they can use a private
     // resolvable address in their advertisements.
-    check_nrf_error(_update_identities(true));
+    check_nrf_error_with_call_id(005, _update_identities(true));
 
     ble_drv_add_event_handler(scan_on_ble_evt, self->scan_results);
 
@@ -597,7 +597,7 @@ mp_obj_t common_hal_bleio_adapter_start_scan(bleio_adapter_obj_t *self, uint8_t 
     if (err_code != NRF_SUCCESS) {
         ble_drv_remove_event_handler(scan_on_ble_evt, self->scan_results);
         self->scan_results = NULL;
-        check_nrf_error(err_code);
+        check_nrf_error_with_call_id(006, err_code);
     }
 
     return MP_OBJ_FROM_PTR(self->scan_results);
@@ -684,7 +684,7 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
 
     if (err_code != NRF_SUCCESS) {
         ble_drv_remove_event_handler(connect_on_ble_evt, &event_info);
-        check_nrf_error(err_code);
+        check_nrf_error_with_call_id(007, err_code);
     }
 
     while (!event_info.done) {
@@ -728,8 +728,8 @@ mp_obj_t common_hal_bleio_adapter_connect(bleio_adapter_obj_t *self, bleio_addre
     //     "The value must be equal to Server RX MTU size given in
     //     sd_ble_gatts_exchange_mtu_reply if an ATT_MTU exchange has
     //     already been performed in the other direction."
-    check_nrf_error(sd_ble_gattc_exchange_mtu_request(conn_handle, BLE_GATTS_VAR_ATTR_LEN_MAX));
-    check_nrf_error(sd_ble_gap_data_length_update(conn_handle, NULL, NULL));
+    check_nrf_error_with_call_id(008, sd_ble_gattc_exchange_mtu_request(conn_handle, BLE_GATTS_VAR_ATTR_LEN_MAX));
+    check_nrf_error_with_call_id(009, sd_ble_gap_data_length_update(conn_handle, NULL, NULL));
 
     // Make the connection object and return it.
     for (size_t i = 0; i < BLEIO_TOTAL_CONNECTION_COUNT; i++) {
@@ -954,7 +954,7 @@ void common_hal_bleio_adapter_start_advertising(bleio_adapter_obj_t *self, bool 
     memcpy(self->advertising_data, advertising_data_bufinfo->buf, advertising_data_bufinfo->len);
     memcpy(self->scan_response_data, scan_response_data_bufinfo->buf, scan_response_data_bufinfo->len);
 
-    check_nrf_error(_common_hal_bleio_adapter_start_advertising(self, connectable, anonymous, timeout, interval,
+    check_nrf_error_with_call_id(010, _common_hal_bleio_adapter_start_advertising(self, connectable, anonymous, timeout, interval,
         self->advertising_data,
         advertising_data_bufinfo->len,
         self->scan_response_data,
@@ -975,7 +975,7 @@ void common_hal_bleio_adapter_stop_advertising(bleio_adapter_obj_t *self) {
     self->user_advertising = false;
 
     if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_INVALID_STATE)) {
-        check_nrf_error(err_code);
+        check_nrf_error_with_call_id(011, err_code);
     }
 }
 
