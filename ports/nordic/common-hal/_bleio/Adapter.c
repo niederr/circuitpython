@@ -588,7 +588,7 @@ mp_obj_t common_hal_bleio_adapter_start_scan(bleio_adapter_obj_t *self, uint8_t 
         .interval = SEC_TO_UNITS(interval, UNIT_0_625_MS) + 0.5f,
         .timeout = nrf_timeout,
         .window = SEC_TO_UNITS(window, UNIT_0_625_MS) + 0.5f,
-        .scan_phys = BLE_GAP_PHY_CODED,
+        .scan_phys = BLE_GAP_PHY_1MBPS,
         .active = active
     };
 
