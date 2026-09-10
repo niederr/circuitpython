@@ -29,7 +29,7 @@ void check_nrf_error_with_call_id(uint16_t call_id, uint32_t err_code) {
     if (err_code == NRF_SUCCESS) {
         return;
     }
-    mp_raise_msg_varg(mp_type_bleio_BluetoothError, MP_ERROR_TEXT("[CALL %u] Unknown system firmware error: %04x"), call_id, err_code);
+    mp_raise_msg_varg(&mp_type_bleio_BluetoothError, MP_ERROR_TEXT("[CALL %u] Unknown system firmware error: %04x"), call_id, err_code);
     switch (err_code) {
         case NRF_ERROR_NO_MEM:
             mp_raise_msg(&mp_type_MemoryError, MP_ERROR_TEXT("Nordic system firmware out of memory"));
